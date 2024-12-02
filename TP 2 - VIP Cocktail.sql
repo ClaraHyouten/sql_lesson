@@ -1,6 +1,6 @@
 DROP DATABASE IF EXISTS invitation;
 
-CREATE DATABASE invitation SET CHARACTER utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE invitation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE invitation;
 
@@ -10,12 +10,16 @@ CREATE TABLE personne(
     nom VARCHAR(255) NOT NULL,
     age INT NOT NULL,
     inscription DATE NOT NULL,
-    etat BOOLEAN NOT NULL,
-    statut ENUM('membre', 'non membre') NOT NULL,
-    cv VARCHAR(255) NOT NULL,
+    etat BOOLEAN NOT NULL DEFAULT 1,
+    statut ENUM('membre', 'non membre') NOT NULL DEFAULT "non membre",
+    cv TEXT,
     salaire INT NOT NULL,
-    CONSTRAINT pk_chats PRIMARY KEY (id)
+    CONSTRAINT pk_personne PRIMARY KEY (id)
 ) ENGINE=InnoDB;
+
+ALTER TABLE personne RENAME TO inv_personne;
+
+ALTER TABLE inv_personne ALTER etat SET DEFAULT 1;
 
 INSERT INTO personne(id, prenom, nom, age, inscription, etat, statut, cv, salaire) VALUES
     (1, 'Brad', 'PITT', 60, '01/01/1970', 1, 'non membre', 'lorem ipsum', 2000000),
