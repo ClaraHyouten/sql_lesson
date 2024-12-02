@@ -2,6 +2,8 @@ DROP DATABASE IF EXISTS invitation;
 
 CREATE DATABASE invitation SET CHARACTER utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+USE invitation;
+
 CREATE TABLE personne(
     id INT NOT NULL AUTO_INCREMENT,
     prenom VARCHAR(255) NOT NULL,
