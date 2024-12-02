@@ -41,3 +41,6 @@ INSERT INTO chat(nom, age, yeux_id) VALUES
     ('Bengal', 18, 1),
     ('Scottish Fold', 10, 1),
     ('domestique', 21, null);
+
+-- vérif que jointure fonctionne bien avec une requête simple
+SELECT chat.nom AS chat, chat.age AS age, couleur.nom AS couleur FROM chat INNER JOIN couleur ON chat.yeux_id = couleur.id;
