@@ -27,10 +27,7 @@ SELECT * FROM chat WHERE id=2;
 -- 3️⃣ - Trier les chats par nom et par age
 -- par nom :
 SELECT * FROM chat
-ORDER BY nom ASC;
--- par age :
-SELECT * FROM chat
-ORDER BY age ASC;
+ORDER BY nom, age;
 
 -- 4️⃣ - Afficher les chats qui vive entre 11 et 19 ans
 SELECT * FROM chat

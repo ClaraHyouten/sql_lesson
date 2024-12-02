@@ -47,6 +47,8 @@ LIMIT 1;
 
 6️⃣ - Afficher le salaire moyen
 SELECT AVG(salaire) AS 'salaire_moyen' FROM inv_personne;
+SELECT ROUND(AVG(salaire)) AS 'salaire_moyen' FROM inv_personne;
+SELECT CAST(AVG(salaire) AS DECIMAL(10, 1)) AS 'salaire_moyen' FROM inv_personne;
 
 -- 7️⃣ - Afficher le nombre de personnes
 SELECT COUNT(*) AS 'nb_personnes' FROM inv_personne;
@@ -77,14 +79,18 @@ WHERE prenom LIKE '%bra%';
 
 -- 12 - Trier par age les membres
 SELECT prenom, nom, age FROM inv_personne
-WHERE age != 60
+WHERE id > 1
 ORDER BY age ASC;
 
 -- 13 - Afficher le nombre d'acteurs "membre"
-SELECT COUNT(*) AS 'nb_membres' FROM inv_personne
+SELECT COUNT(id) AS 'nb_membres' FROM inv_personne
 WHERE statut='membre';
 
 -- 14 - Afficher le nombre des membres et d'acteur "non membre"
+SELECT statut AS 'membre', COUNT(id) AS 'nb_membres' FROM inv_personne
+GROUP BY statut
+ORDER BY nb_membres DESC;
+
 SELECT 
     CASE 
         WHEN statut = 'membre' THEN 'Membres'
