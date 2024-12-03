@@ -109,8 +109,8 @@ INSERT INTO clients (noCli, nom, prenom, adresse, cpo, ville) VALUES
 INSERT INTO fiches (noFic, noCli, dateCrea, datePaiement, etat) VALUES 
     (1001, 14,  DATE_SUB(NOW(),INTERVAL  15 DAY), DATE_SUB(NOW(),INTERVAL  13 DAY),'SO' ),
     (1002, 4,  DATE_SUB(NOW(),INTERVAL  13 DAY), NULL, 'EC'),
-    (1003, 1,  DATE_SUB(NOW(),INTERVAL  12 DAY), DATE_SUB(NOW(),INTERVAL  10 DAY),'SO'),
-    (1004, 6,  DATE_SUB(NOW(),INTERVAL  11 DAY), NULL, 'EC'),
+    (1003, 6,  DATE_SUB(NOW(),INTERVAL  12 DAY), DATE_SUB(NOW(),INTERVAL  10 DAY),'SO'),
+    (1004, 5,  DATE_SUB(NOW(),INTERVAL  11 DAY), NULL, 'EC'),
     (1005, 3,  DATE_SUB(NOW(),INTERVAL  10 DAY), NULL, 'EC'),
     (1006, 9,  DATE_SUB(NOW(),INTERVAL  10 DAY),NULL ,'RE'),
     (1007, 1,  DATE_SUB(NOW(),INTERVAL  3 DAY), NULL, 'EC'),
@@ -217,3 +217,115 @@ INSERT INTO lignesFic (noFic, noLig,  refart, depart, retour) VALUES
 -- 1️⃣ Liste des clients (toutes les informations) dont le nom commence par un D
 SELECT noCli, nom, prenom, adresse, cpo, ville FROM clients
 WHERE clients.nom LIKE 'D%';
+
+-- 2️⃣ Nom et prénom de tous les clients
+SELECT prenom, nom FROM clients;
+
+-- 3️⃣ Liste des fiches (n°, état) pour les clients (nom, prénom) qui habitent en Loire Atlantique (44)
+SELECT f.noFic, f.etat, c.nom, c.prenom FROM fiches AS f
+    INNER JOIN clients AS c ON c.noCli = f.noCli
+    WHERE c.cpo LIKE '44%'
+    ORDER BY noFic ASC;
+
+-- 4️⃣ Détail de la fiche n°1002
+SELECT f.noFic, 
+    c.nom, 
+    c.prenom, 
+    lf.refart, 
+    a.designation, 
+    lf.depart, 
+    lf.retour, 
+    t.prixJour,
+    (IFNULL(DATEDIFF(lf.retour, lf.depart), DATEDIFF(CURDATE(), lf.depart))) * t.prixJour AS montant
+    FROM fiches AS f
+    INNER JOIN clients AS c ON c.noCli = f.noCli
+    INNER JOIN lignesFic AS lf ON lf.noFic = f.noFic
+    INNER JOIN articles AS a ON a.refart = lf.refart
+    INNER JOIN categories AS ca ON ca.codeCate = a.codeCate
+    INNER JOIN grilleTarifs AS gt ON gt.codeCate = ca.codeCate
+    INNER JOIN tarifs AS t ON t.codeTarif = gt.codeTarif
+    WHERE f.noFic = 1002;
+
+-- 5️⃣ Prix journalier moyen de location par gamme
+SELECT g.libelle AS 'Gamme', ROUND(AVG(t.prixJour), 2) AS 'Tarif journalier moyen' FROM gammes AS g
+    INNER JOIN grilleTarifs AS gt ON gt.codeGam = g.codeGam
+    INNER JOIN tarifs AS t ON t.codeTarif = gt.codeTarif
+    GROUP BY g.libelle;
+
+-- 6️⃣ Détail de la fiche n°1002 avec le total
+SELECT f.noFic, 
+       c.nom, 
+       c.prenom, 
+       lf.refart, 
+       a.designation, 
+       lf.depart, 
+       lf.retour, 
+       t.prixJour,
+       (IFNULL(DATEDIFF(lf.retour, lf.depart), DATEDIFF(CURDATE(), lf.depart))) * t.prixJour AS montant,
+       -- Sous-requête pour avoir le total des montants
+       (SELECT SUM(IFNULL(DATEDIFF(lf_sub.retour, lf_sub.depart), DATEDIFF(CURDATE(), lf_sub.depart)) * t_sub.prixJour) 
+        FROM lignesFic lf_sub
+        INNER JOIN articles a_sub ON a_sub.refart = lf_sub.refart
+        INNER JOIN grilleTarifs gt_sub ON gt_sub.codeCate = a_sub.codeCate
+        INNER JOIN tarifs t_sub ON t_sub.codeTarif = gt_sub.codeTarif
+        WHERE lf_sub.noFic = f.noFic) AS total
+    FROM fiches f
+    INNER JOIN clients c ON c.noCli = f.noCli
+    INNER JOIN lignesFic lf ON lf.noFic = f.noFic
+    INNER JOIN articles a ON a.refart = lf.refart
+    INNER JOIN categories ca ON ca.codeCate = a.codeCate
+    INNER JOIN grilleTarifs gt ON gt.codeCate = ca.codeCate
+    INNER JOIN tarifs t ON t.codeTarif = gt.codeTarif
+    WHERE f.noFic = 1002;
+
+-- 7️⃣ Grille des tarifs
+SELECT c.libelle, g.libelle, t.libelle, t.prixJour
+    FROM categories AS c
+    INNER JOIN grilleTarifs AS gt ON gt.codeCate = c.codeCate
+    INNER JOIN tarifs AS t ON t.codeTarif = gt.codeTarif
+    INNER JOIN gammes AS g ON g.codeGam = gt.codeGam;
+
+-- 8️⃣ Liste des locations de la catégorie SURF
+SELECT a.refart, a.designation, COUNT(lf.refart) AS nbLocation
+    FROM articles AS a
+    INNER JOIN categories AS ca ON ca.codeCate = a.codeCate
+    INNER JOIN lignesFic AS lf ON lf.refart = a.refart
+    WHERE a.codeCate = 'SURF'
+    GROUP BY a.refart, a.designation;
+
+-- 9️⃣ Calcul du nombre moyen d’articles loués par fiche de location
+SELECT 
+    AVG(nb_articles) AS nb_lignes_moyen_par_fiche
+FROM (
+    SELECT COUNT(noFic) AS nb_articles
+    FROM lignesFic
+    GROUP BY noFic
+) AS fiches_articles_count;
+
+-- 🔟 Calcul du nombre de fiches de location établies pour les catégories de location Ski alpin, Surf et Patinette
+SELECT 
+    ca.libelle AS catégorie,
+    COUNT(DISTINCT lf.noFic) AS nombre_de_location
+FROM categories AS ca
+INNER JOIN articles AS a ON a.codeCate = ca.codeCate
+INNER JOIN lignesFic AS lf ON lf.refart = a.refart
+INNER JOIN fiches AS f ON f.noFic = lf.noFic
+WHERE ca.libelle IN ('Ski alpin', 'Surf', 'Patinette')
+GROUP BY ca.libelle;
+
+-- 11 Calcul du montant moyen des fiches de location
+SELECT 
+    AVG(montant) AS montant_moyen_fiche
+FROM (
+    SELECT 
+        f.noFic,
+        SUM(IFNULL(DATEDIFF(lf.retour, lf.depart), DATEDIFF(CURDATE(), lf.depart)) * t.prixJour) AS montant
+    FROM fiches AS f
+    INNER JOIN lignesFic AS lf ON lf.noFic = f.noFic
+    INNER JOIN articles AS a ON a.refart = lf.refart
+    INNER JOIN categories AS ca ON ca.codeCate = a.codeCate
+    INNER JOIN grilleTarifs AS gt ON gt.codeCate = ca.codeCate
+    INNER JOIN tarifs AS t ON t.codeTarif = gt.codeTarif
+    GROUP BY f.noFic
+) AS montants_fiches;
+
