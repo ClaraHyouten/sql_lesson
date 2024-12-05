@@ -84,8 +84,7 @@ INSERT INTO factures (ref, devis_ref, info, total, date_emission, date_paiement)
     ('FA003', 'DEV2100C', 'Logiciel CRM', 5000, '2024-02-01', NULL),
     ('FA004', 'DEV2100D', 'Logiciel devis', 3000, '2024-03-03', '2024-04-03'),
     ('FA005', 'DEV2100E', 'Site internet ecommerce', 5000, '2023-03-01', NULL),
-    ('FA006', 'DEV2100F', 'logiciel ERP', 2000, '2023-03-01', NULL),
-    ('FA007', 'DEV2100G', 'logiciel gestion stock', 2000, '2023-03-01', NULL);
+    ('FA006', 'DEV2100F', 'logiciel ERP', 2000, '2023-03-01', NULL);
 
 
 -- Partie 2
@@ -101,22 +100,20 @@ SELECT c.nom AS client, COUNT(factures.ref) AS nb_factures
 FROM clients AS c
 INNER JOIN projets ON projets.clients_id = c.id
 INNER JOIN devis ON devis.projets_id = projets.id
-INNER JOIN factures ON factures.devis_ref = devis.ref
+LEFT JOIN factures ON factures.devis_ref = devis.ref
 GROUP BY c.nom;
 
-
 -- 3️⃣ Afficher le chiffre d'affaire par client
-SELECT c.nom AS client, SUM(factures.total) AS chiffre_d_affaire
+SELECT c.nom AS client, IFNULL(SUM(factures.total), 0) AS chiffre_d_affaire
 FROM clients AS c
 INNER JOIN projets ON projets.clients_id = c.id
 INNER JOIN devis ON devis.projets_id = projets.id
-INNER JOIN factures ON factures.devis_ref = devis.ref
+LEFT JOIN factures ON factures.devis_ref = devis.ref
 GROUP BY c.nom;
 
 -- 4️⃣ Afficher le CA total
 SELECT SUM(factures.total) AS total_factures
 FROM factures;
-
 
 -- 5️⃣ Afficher la somme du montant des factures en attente de paiement
 SELECT SUM(factures.total) AS total_factures
