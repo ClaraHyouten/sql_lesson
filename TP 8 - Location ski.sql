@@ -30,7 +30,7 @@ CREATE TABLE fiches(
     noCli INT NOT NULL,
     dateCrea DATE NOT NULL,
     datePaiement DATE,
-    etat ENUM('SO', 'EC', 'RE') NOT NULL,
+    etat ENUM('SO', 'EC', 'RE') NOT NULL DEFAULT 'EC',
     CONSTRAINT pk_fiches PRIMARY KEY (noFic)
 ) ENGINE=InnoDB;
 
@@ -231,12 +231,13 @@ SELECT f.noFic, f.etat, c.nom, c.prenom FROM fiches AS f
 SELECT f.noFic, 
     c.nom, 
     c.prenom, 
-    lf.refart, 
+    a.refart, 
     a.designation, 
     lf.depart, 
     lf.retour, 
     t.prixJour,
-    (IFNULL(DATEDIFF(lf.retour, lf.depart), DATEDIFF(CURDATE(), lf.depart))) * t.prixJour AS montant
+    (IFNULL((DATEDIFF(lf.retour, lf.depart) + 1), (DATEDIFF(CURDATE(), lf.depart) + 1))) * t.prixJour AS montant
+    -- COALESCE((DATEDIFF(lf.retour, lf.depart) + 1) * t.prixJour, (DATEDIFF(CURDATE(), lf.depart) + 1) * t.prixJour) AS montant
     FROM fiches AS f
     INNER JOIN clients AS c ON c.noCli = f.noCli
     INNER JOIN lignesFic AS lf ON lf.noFic = f.noFic
@@ -276,6 +277,7 @@ SELECT f.noFic,
     INNER JOIN categories ca ON ca.codeCate = a.codeCate
     INNER JOIN grilleTarifs gt ON gt.codeCate = ca.codeCate
     INNER JOIN tarifs t ON t.codeTarif = gt.codeTarif
+    -- INNER JOIN tarifs t USING codeTarif
     WHERE f.noFic = 1002;
 
 -- 7️⃣ Grille des tarifs
