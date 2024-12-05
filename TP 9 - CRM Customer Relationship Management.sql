@@ -139,29 +139,29 @@ AND DATEDIFF(CURDATE(), date_emission)  > 30;
 -- [OPTIONEL]
 -- Réaliser le modèle relationnel sur db diagram et fournir le prompt
 Table clients {
-  id integer [primary key]
-  nom varchar 
+  id integer [primary key, not null, increment]
+  nom varchar [not null]
 }
 
 Table projets {
-  id integer [primary key]
-  nom varchar
-  version char
-  clients_id integer
+  id integer [primary key, not null, increment]
+  nom varchar [not null]
+  version int [not null]
+  clients_id integer [not null]
   }
 
 Table devis {
-  ref varchar [primary key]
-  projets_id integer
-  montant integer
+  ref varchar [primary key, not null]
+  projets_id integer [not null]
+  montant float [not null]
 }
 
 Table factures {
-  ref varchar [primary key]
-  devis_ref varchar
-  info varchar
-  total integer
-  date_emission timestamp
+  ref varchar [primary key, not null]
+  devis_ref varchar [not null]
+  info varchar [not null]
+  total float [not null]
+  date_emission timestamp [not null]
   date_paiement timestamp
 }
 
